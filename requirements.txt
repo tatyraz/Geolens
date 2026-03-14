@@ -1,0 +1,5 @@
+google-adk
+google-genai
+trafilatura
+python-dotenv
+streamlit
