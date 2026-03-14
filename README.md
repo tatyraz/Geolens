@@ -1,66 +1,91 @@
 # GeoLens: AI-Powered Geopolitical Media Bias Detector
 
-**GeoLens** is an advanced analysis system built with **Google ADK** designed to identify and mitigate geopolitical bias in news reporting. By leveraging the **Gemini 2.5 Flash** model, it dissects news articles to reveal hidden framings, missing perspectives, and provides a balanced rewrite of the content.
-
-## System Architecture
-
-The following text-based A2A (Agent-to-Agent) flow illustrates how the specialized agents connect to process a news URL:
-
-**User Input (URL)**  
-      ↓  
-**Extractor Agent** (Scrapes article text and identifies core claims/framing)  
-      ↓  
-**Bias Classifier Agent** (Analyzes types and severity of bias found in the extraction)  
-      ↓  
-**Perspective Agent** (Identifies what information or voices were omitted)  
-      ↓  
-**Scorer Agent** (Assigns a 0-100 neutrality score based on cumulative findings)  
-      ↓  
-**Rewriter Agent** (Produces a final, neutral summary of the article)  
-      ↓  
-**Root Agent (GeoLens)** (Orchestrates the components and delivers the complete analysis report)
+**GeoLens** is an advanced media analysis system built with **Google ADK** and **Gemini 2.5 Flash**. It is designed to deconstruct news articles, identify underlying geopolitical biases, uncover missing perspectives, and provide a neutral alternative to biased reporting.
 
 ---
 
-## Agent Profiles
+## 🏗 System Architecture (Agent-to-Agent Flow)
 
-GeoLens utilizes **five specialized agents**, each with a distinct role in the geopolitical analysis pipeline:
+The system operates through a root orchestrator that delegates tasks to specialized agents and tools.
 
-1.  **Extractor Agent**: Acts as the primary data miner. It uses the `scrape_article` tool to retrieve text and isolates **3-5 key claims**, identifies **emotionally loaded words**, and defines the article's initial **framing**.
-2.  **Bias Classifier Agent**: Serves as a media bias expert. It categorizes bias into five specific types—**political, emotional, omission, framing, or source bias**—and rates the **severity** as Low, Medium, or High.
-3.  **Perspective Agent**: Functions as a journalism auditor. This agent looks for **missing voices**, **omitted context**, and flags **unanswered questions** that may lead to a one-sided narrative.
-4.  **Scorer Agent**: Operates as a neutrality metricist. It calculates a **Neutrality Score out of 100** and provides a breakdown of language, perspective, framing, and source bias.
-5.  **Rewriter Agent**: Acts as a neutral journalist. It synthesizes the analysis to **rewrite the article** (max 150 words), removing bias and incorporating missing perspectives to ensure a fair presentation of all sides.
-
----
-
-## Setup Instructions
-
-To run GeoLens locally, follow these steps based on the project structure:
-
-### 1. Prerequisites
-Ensure you have **Python 3.10+** installed along with the following dependencies:
-*   **google-adk**: For agent orchestration.
-*   **trafilatura**: For web scraping and text extraction.
-
-```bash
-pip install google-adk trafilatura
+```text
+[User Input: URL(s)] 
+       |
+       v
+[Root Agent: geolens] <-----------------------+
+       |                                      |
+       +--- [Tool: scrape_article]            |
+       |                                      |
+       +--- [Agent: extractor_agent] ---------+--> (Claims, Framing, Loaded Words)
+       |                                      |
+       +--- [Agent: bias_classifier_agent] ---+--> (Bias Types, Direction, Severity)
+       |                                      |
+       +--- [Agent: perspective_agent] -------+--> (Missing Context/Voices)
+       |                                      |
+       +--- [Agent: scorer_agent] ------------+--> (Neutrality Score 0-100)
+       |                                      |
+       +--- [Agent: rewriter_agent] ----------+--> (Neutral 150-word Rewrite)
+       |                                      |
+       +--- [Tool: search_related_articles] --+--> (Comparative Source Analysis)
+       |
+[Final Output Report]
 ```
 
-### 2. Configuration
-The project uses the **Gemini 2.5 Flash** model. You will need to ensure your environment is configured with the necessary Google Cloud or AI Studio API credentials to access this model via the ADK.
+---
 
-### 3. Project Structure
-Organize your files as shown in the sources:
-*   `agent.py`: Contains the `root_agent` and core scraping tool.
-*   `agents/extractor.py`: Logic for the Extractor Agent.
-*   `agents/bias_classifier.py`: Logic for the Bias Classifier Agent.
-*   `agents/perspective.py`: Logic for the Perspective Agent.
-*   `agents/scorer.py`: Logic for the Scorer Agent.
-*   `agents/rewriter.py`: Logic for the Rewriter Agent.
+## 🤖 Agent Profiles
 
-### 4. Running the Project
-Initialize the `root_agent` from `agent.py`. When prompted, provide a **news article URL**. The system will automatically:
-1.  **Scrape** the content using `trafilatura`.
-2.  **Process** the text through the agent chain.
-3.  **Output** a comprehensive report including key claims, bias detection, missing context, a neutrality score, and a neutral rewrite.
+GeoLens utilizes five specialized agents to provide a comprehensive bias report:
+
+1.  **Extractor Agent (`extractor_agent`)**: Acts as a media analyst to scrape article text and extract the 3-5 most important claims, emotionally loaded words, and the overall framing of the piece.
+2.  **Bias Classifier Agent (`bias_classifier_agent`)**: An expert in detection who categorizes bias into specific types: political, emotional, omission, framing, or source bias. It determines the bias direction and rates severity (Low, Medium, or High).
+3.  **Perspective Agent (`perspective_agent`)**: A journalism expert focused on balance; it identifies missing voices, omitted context, and critical unanswered questions within a report.
+4.  **Scorer Agent (`scorer_agent`)**: Quantifies neutrality on a scale of 0-100. It provides a breakdown across four categories—Language, Perspective, Framing, and Source—concluding with a one-sentence verdict.
+5.  **Rewriter Agent (`rewriter_agent`)**: A neutral journalist that strips away loaded language and incorporates missing perspectives to create a fair, concise summary (max 150 words).
+
+---
+
+## 🛠 Tools
+
+### News Search Tool (`search_related_articles`)
+This tool allows GeoLens to look beyond a single source. It uses `googlesearch-python` to find three related news articles on the same topic. For each result, it uses `trafilatura` to fetch the content and provides a short summary, enabling the system to show how different outlets cover the same event.
+
+---
+
+## ⚙️ Local Setup
+
+To run GeoLens locally, ensure you have Python installed and follow these steps:
+
+1.  **Clone the repository and install dependencies:**
+    ```bash
+    pip install google-adk trafilatura googlesearch-python
+    ```
+2.  **Configure Environment Variables:**
+    Set your Gemini API key:
+    ```bash
+    export GOOGLE_API_KEY='your_gemini_api_key'
+    ```
+3.  **Directory Structure:**
+    Ensure your files are organized as follows:
+    *   `agent.py` (Root agent)
+    *   `agents/` (Contains `extractor.py`, `bias_classifier.py`, etc.)
+    *   `tools/` (Contains `news_search.py`)
+
+4.  **Run the application:**
+    ```bash
+    python agent.py
+    ```
+
+---
+
+## 📖 Example Usage
+
+### 1. Single Article Analysis
+Input a single URL to receive a deep dive into its framing and neutrality.
+*   **Input:** `https://example-news.com/geopolitical-event`
+*   **Output includes:** Key claims, identified bias types (e.g., "Omission bias"), a neutrality score (e.g., "65/100"), and a 150-word neutral rewrite.
+
+### 2. Two Article Comparison
+Input two URLs to see how different media outlets contrast in their coverage.
+*   **Input:** `URL_1`, `URL_2`
+*   **Output includes:** Individual analysis for both articles followed by a **Bias Comparison** that highlights which article is more biased, what agenda each outlet is pushing, and a combined neutral summary of the event.
